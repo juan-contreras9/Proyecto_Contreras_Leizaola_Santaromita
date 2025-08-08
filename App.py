@@ -89,3 +89,51 @@ Seleccione una opción: """)
         if dep_seleccionado is None:
             print("Departamento no encontrado.")
             return
+
+        print(f"Departamento seleccionado: {dep_seleccionado.nombre}")
+        url_obras = f'https://collectionapi.metmuseum.org/public/collection/v1/objects?departmentId={dep_seleccionado.id}'
+        response = requests.get(url_obras).json()
+        self.obras.clear()
+        
+        if response.get('objectIDs'):
+            print(f"Mostrando hasta 10 obras del departamento '{dep_seleccionado.nombre}':")
+            self.obras.clear()
+            for idx, object_id in enumerate(response['objectIDs'][:10], 1):
+                obra_data = requests.get(f'https://collectionapi.metmuseum.org/public/collection/v1/objects/{object_id}').json()
+                artista_object = Artista(
+                    obra_data.get("artistDisplayName", "Desconocido"),
+                    obra_data.get("artistNationality", "Desconocido"),
+                    obra_data.get("artistBeginDate", ""),
+                    obra_data.get("artistEndDate", "")
+                )
+                obra_object = Obra(
+                    obra_data.get("objectID", 0),
+                    obra_data.get("title", "Sin título"),
+                    artista_object,
+                    obra_data.get("department", ""),
+                    obra_data.get("classification", ""),
+                    obra_data.get("accessionYear", ""),
+                    obra_data.get("primaryImage", "")
+                )
+                self.obras.append(obra_object)
+                print(f"{idx}. Obra: {obra_object.titulo} | Artista: {obra_object.artista.nombre} | Año: {obra_object.anio}")
+
+            try:
+                seleccion_obra = int(input("\nSeleccione el número de la obra para ver detalles: "))
+                if 1 <= seleccion_obra <= len(self.obras):
+                    obra_seleccionada = self.obras[seleccion_obra - 1]
+                    print("\n--- Detalles de la obra seleccionada ---")
+                    print(f"Título: {obra_seleccionada.titulo}")
+                    print(f"Nombre del artista: {obra_seleccionada.artista.nombre}")
+                    print(f"Nacionalidad del artista: {obra_seleccionada.artista.nacionalidad}")
+                    print(f"Fecha de nacimiento: {obra_seleccionada.artista.fecha_de_nacimiento}")
+                    print(f"Fecha de muerte: {obra_seleccionada.artista.fecha_de_muerte}")
+                    print(f"Tipo: {obra_seleccionada.tipo}")
+                    print(f"Año de creación: {obra_seleccionada.anio}")
+                    print(f"URL de la imagen: {obra_seleccionada.imagen_url}")
+                else:
+                    print("Selección fuera de rango.")
+            except ValueError:
+                print("Selección inválida.")
+        else:
+            print("No se encontraron obras para este departamento.")
