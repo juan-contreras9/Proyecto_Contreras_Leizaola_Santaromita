@@ -137,3 +137,43 @@ Seleccione una opción: """)
                 print("Selección inválida.")
         else:
             print("No se encontraron obras para este departamento.")
+
+def obras_por_nombre_autor(self):
+        
+        #Permite buscar obras por el nombre del autor, mostrar una lista y ver detalles de una obra seleccionada.
+        
+        nombre_autor = input("Ingrese el nombre del autor a buscar correctamente: ")
+        if not nombre_autor:
+            print("Debe ingresar un nombre de autor.")
+            return
+        print(f"\nBuscando obras del autor: {nombre_autor}\n(Espere, esto puede tardar unos segundos...)")
+        url = f'https://collectionapi.metmuseum.org/public/collection/v1/search?artistOrCulture=true&q={nombre_autor}'
+        response = requests.get(url).json()
+        obras = []
+        if response.get('objectIDs'):
+            print(f"Se encontraron {len(response['objectIDs'])} obras. Mostrando hasta 10:")
+            for idx, object_id in enumerate(response['objectIDs'][:10], 1):
+                obra_data = requests.get(f'https://collectionapi.metmuseum.org/public/collection/v1/objects/{object_id}').json()
+                obras.append(obra_data)
+                print(f"{idx}. {obra_data.get('title', 'Sin título')} | Artista: {obra_data.get('artistDisplayName', 'Desconocido')} | Año: {obra_data.get('accessionYear', '')}")
+
+            try:
+                seleccion_obra = int(input("\nSeleccione el número de la obra para ver detalles: "))
+                if 1 <= seleccion_obra <= len(obras):
+                    obra = obras[seleccion_obra - 1]
+                    print("\n--- Detalles de la obra seleccionada ---")
+                    print(f"Título: {obra.get('title', 'Sin título')}")
+                    print(f"Nombre del artista: {obra.get('artistDisplayName', 'Desconocido')}")
+                    print(f"Nacionalidad del artista: {obra.get('artistNationality', 'Desconocido')}")
+                    print(f"Fecha de nacimiento: {obra.get('artistBeginDate', '')}")
+                    print(f"Fecha de muerte: {obra.get('artistEndDate', '')}")
+                    print(f"Tipo: {obra.get('classification', '')}")
+                    print(f"Año de creación: {obra.get('accessionYear', '')}")
+                    print(f"URL de la imagen: {obra.get('primaryImage', '')}")
+                else:
+                    print("Selección fuera de rango.")
+            except ValueError:
+                print("Selección inválida.")
+        else:
+            print("No se encontraron obras para este autor.")
+
