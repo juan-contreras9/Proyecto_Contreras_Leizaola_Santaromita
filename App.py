@@ -177,3 +177,46 @@ def obras_por_nombre_autor(self):
         else:
             print("No se encontraron obras para este autor.")
 
+
+def obras_por_nacionalidad(self):
+        
+        #Permite buscar obras por nacionalidad del autor, mostrando una lista de nacionalidades y obras encontradas.
+        
+        # Leer nacionalidades del CSV
+        nacionalidades = []
+        with open('nacionalidades.csv', newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader)  # Saltar encabezado
+            for row in reader:
+                if row:
+                    nacionalidades.append(row[0])
+
+        print("\nNacionalidades disponibles:")
+        for idx, nacion in enumerate(nacionalidades, 1):
+            print(f"{idx}. {nacion}")
+
+        try:
+            seleccion = int(input("\nSeleccione el número de la nacionalidad: "))
+            if 1 <= seleccion <= len(nacionalidades):
+                nacionalidad_seleccionada = nacionalidades[seleccion - 1]
+            else:
+                print("Selección fuera de rango.")
+                return
+        except ValueError:
+            print("Selección inválida.")
+            return
+
+        print(f"\nBuscando obras de autores con nacionalidad: {nacionalidad_seleccionada}\n(Espere, esto puede tardar unos segundos...)")
+        # Buscar obras por nacionalidad usando la API
+        url = f'https://collectionapi.metmuseum.org/public/collection/v1/search?artistOrCulture=true&q={nacionalidad_seleccionada}'
+        response = requests.get(url).json()
+        if response.get('objectIDs'):
+            print(f"Se encontraron {len(response['objectIDs'])} obras. Mostrando hasta 10:")
+            for object_id in response['objectIDs'][:10]:
+                obra_data = requests.get(f'https://collectionapi.metmuseum.org/public/collection/v1/objects/{object_id}').json()
+                print(f"- {obra_data.get('title', 'Sin título')} | Artista: {obra_data.get('artistDisplayName', 'Desconocido')} | Nacionalidad: {obra_data.get('artistNationality', 'Desconocido')}")
+        else:
+            print("No se encontraron obras para esta nacionalidad.")
+
+    
+
